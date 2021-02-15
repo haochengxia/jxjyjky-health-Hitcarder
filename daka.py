@@ -2,14 +2,16 @@
 
 """jx jyjky daka script"""
 
-import requests, json
-import os
-import urllib3
+
+import requests, json, os, logging, urllib3, time
 import pandas as pd
 from apscheduler.schedulers.blocking import BlockingScheduler
 
+
 class Daka():
     def __init__(self, login_name, password, temperature=36.7) -> None:
+        """init info"""
+        
         self.login_name = login_name
         self.password = password
         
@@ -23,14 +25,7 @@ class Daka():
         self.login_url = 'https://jk.zjjxedu.gov.cn/sso/mobi/WxLogin2'
         self.post_url = 'https://jk.zjjxedu.gov.cn/health/mobiapi/savePunchclock'
         
-        # self.get_info_url = 'https://jk.zjjxedu.gov.cn/health/mobiapi/getUserInfo'
-        # self.get_type_url = 'https://jk.zjjxedu.gov.cn/health/mobiapi/getUserType'
-        
         self.sess = requests.Session()
-
-    # def get_info(self):
-    #     self.sess.get(self.get_info_url, headers=self.headers)
-    #     self.sess.get(self.get_type_url, headers=self.headers)
 
     def login(self):
         """Login to platform"""
@@ -43,13 +38,16 @@ class Daka():
         res = self.sess.post(url=self.login_url, data=data, verify = False)
         res = json.loads(res.content.decode())
         if res['code'] != 0:
-            raise LoginError('登录失败，请核实账号密码重新登录')
+            raise LoginError('[*] %s 登录失败，请核实账号密码重新登录，当前用户名%s' 
+                             %(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                             self.login_name))
         self.headers['ticket'] = res['data']['ticket']
         
         return self.sess
     
     def post(self):
         """Post the hitcard info"""
+        
         self.info = {
             'temperature': self.temperature,
             'is_whether' : '1',
@@ -79,16 +77,19 @@ def main():
         password = item[1]
         
         # is temp exist
-        if len(item) > 2:
+        if len(item) > 2 and not pd.isnull(item[2]):
             dk = Daka(login_name, password, temperature=item[2])
- 
-        dk = Daka(login_name, password)
+        else:
+            dk = Daka(login_name, password)
+            
         try:
             dk.login()
+            res = dk.post()
+            if res['code'] == 0:
+                print('[+] %s 打卡成功，当前用户名%s' 
+                      %(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), dk.login_name))
         except LoginError as err:
             print(err)
-    
-        res = dk.post()
 
 
 if __name__ == "__main__":
