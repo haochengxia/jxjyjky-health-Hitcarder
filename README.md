@@ -1,4 +1,4 @@
-# JX jyjky 自动打卡脚本
+# JX jyjky 自动健康打卡脚本
 
 项目用于学习交流
 
@@ -42,6 +42,6 @@
    ```bash
    $ python3 daka.py
    ```
-   > 后台运行可使用tmux或nohup等，如nohup python3 daka.py &
+   > 后台运行可使用`tmux`或`nohup`等，如`nohup python3 daka.py &`
 
 
