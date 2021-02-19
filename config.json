@@ -3,5 +3,11 @@
     {
         "hour": 7,
         "minute": 15
+    },
+    "temperature":
+    {
+        "random": true,
+        "high_bound": 36.6,
+        "low_bound": 36.2
     }
 }

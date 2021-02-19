@@ -3,13 +3,13 @@
 """jx jyjky daka script"""
 
 
-import requests, json, os, logging, urllib3, time
+import requests, json, os, logging, urllib3, time, random
 import pandas as pd
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 
 class Daka():
-    def __init__(self, login_name, password, temperature=36.7) -> None:
+    def __init__(self, login_name, password, temperature=36.4) -> None:
         """init info"""
         
         self.login_name = login_name
@@ -66,7 +66,7 @@ class LoginError(Exception):
     """Login Exception"""
     pass
 
-def main():
+def main(*temp_range):
     df = pd.read_csv('./list.csv')
     for item in df.values:
         for i in range(2):
@@ -76,18 +76,26 @@ def main():
         login_name = item[0]
         password = item[1]
         
-        # is temp exist
+        # 是否指定温度
         if len(item) > 2 and not pd.isnull(item[2]):
             dk = Daka(login_name, password, temperature=item[2])
         else:
-            dk = Daka(login_name, password)
+            # 如不存在指定温度，配置文件是否生成随机温度
+            if isinstance(temp_range[0], dict):
+                dk = Daka(login_name, password, 
+                         random.randrange(round(temp_range[0]["low_bound"] * 10), 
+                                          round(temp_range[0]["high_bound"] * 10), 1) / 10)
+
+            # 否则，使用默认温度
+            else:
+                dk = Daka(login_name, password)
             
         try:
             dk.login()
             res = dk.post()
             if res['code'] == 0:
-                print('[+] %s 打卡成功，当前用户名%s' 
-                      %(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), dk.login_name))
+                print('[+] %s 打卡成功，当前用户名%s \t打卡体温 %s' 
+                      %(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), dk.login_name, dk.temperature))
         except LoginError as err:
             print(err)
 
@@ -99,8 +107,16 @@ if __name__ == "__main__":
         configs = json.loads(open('./config.json', 'r').read())
         hour = configs["schedule"]["hour"]
         minute = configs["schedule"]["minute"]
+        # 是否指定随机温度
+        flag_random = configs["temperature"]["random"]
+        if flag_random:
+            # 获取温度上下界
+            temp_range = dict()
+            temp_range["high_bound"] = configs["temperature"]["high_bound"]
+            temp_range["low_bound"] = configs["temperature"]["low_bound"]
+            
+    main() if not 'temp_range' in vars() else main(temp_range)
     
-    main()
     # Schedule task
     scheduler = BlockingScheduler()
     scheduler.add_job(main, 'cron', args=[], hour=hour, minute=minute)

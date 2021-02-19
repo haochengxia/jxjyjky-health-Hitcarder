@@ -28,15 +28,21 @@
 
     提示: 登陆默认密码为hy123456，如果修改了可直接在csv文件中进行改动。
 
-    b. config.json中的内容为自动打卡定时信息(默认7点15分打卡)：
+    b. config.json中的内容为自动打卡定时信息和随机上报温度信息(默认7点15分打卡，默认随机36.2~36.6℃)：
     ```json
-    {
-        "schedule":
         {
-        "hour": 7,
-        "minute": 15
+            "schedule":
+            {
+                "hour": 7,
+                "minute": 15
+            },
+            "temperature":
+            {
+                "random": true,
+                "high_bound": 36.6,
+                "low_bound": 36.2
+            }
         }
-    }
     ```
 4. 启动定时打卡脚本
    ```bash
