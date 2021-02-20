@@ -2,7 +2,6 @@
 
 """jx jyjky daka script"""
 
-
 import requests, json, os, logging, urllib3, time, random
 import pandas as pd
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -81,14 +80,13 @@ def main(*temp_range):
             dk = Daka(login_name, password, temperature=item[2])
         else:
             # 如不存在指定温度，配置文件是否生成随机温度
-            if isinstance(temp_range[0], dict):
+            if 'temp_range' in vars() and isinstance(temp_range[0], dict):
                 dk = Daka(login_name, password, 
-                         random.randrange(round(temp_range[0]["low_bound"] * 10), 
-                                          round(temp_range[0]["high_bound"] * 10), 1) / 10)
-
+                          random.randrange(round(temp_range[0]["low_bound"] * 10), 
+                                           round(temp_range[0]["high_bound"] * 10), 1) / 10)
             # 否则，使用默认温度
             else:
-                dk = Daka(login_name, password)
+            	dk = Daka(login_name, password)
             
         try:
             dk.login()
@@ -119,7 +117,7 @@ if __name__ == "__main__":
     
     # Schedule task
     scheduler = BlockingScheduler()
-    scheduler.add_job(main, 'cron', args=[], hour=hour, minute=minute)
+    scheduler.add_job(main, 'cron', args=[] if not 'temp_range' in vars() else [temp_range], hour=hour, minute=minute)
     print('已启动定时程序，每天 %02d:%02d 为您打卡' %(int(hour), int(minute)))
     print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
 
