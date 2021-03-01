@@ -58,7 +58,12 @@ class Daka():
         }
         
         res = self.sess.post(self.post_url, data=self.info, headers=self.headers)
-        return json.loads(res.text)
+        # 处理res.text空字串 "" 的情况
+        if res.text == "":
+            # 重试一次
+            res = self.sess.post(self.post_url, data=self.info, headers=self.headers)
+        # res.text空字串 "" 返回 code: 1
+        return json.loads(res.text) if res.text != "" else json.loads('{"code": 1}')
 
 # Exceptions 
 class LoginError(Exception):
